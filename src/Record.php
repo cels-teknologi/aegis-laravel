@@ -34,12 +34,13 @@ class Record implements Arrayable
         ];
         $ignores = [];
         $finished = false;
+        $traces = \array_merge([$cause, ], $this->exception->getTrace());
 
         foreach (config('aegis.ignore') as $ignore) {
             $ignores[] = base_path($ignore);
         }
 
-        foreach ($this->exception->getTrace() as $trace) {
+        foreach ($traces as $trace) {
             $path = $trace['file'];
             foreach ($ignores as $ignore) {
                 if (Str::startsWith($path, $ignore)) {
