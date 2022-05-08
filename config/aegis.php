@@ -120,4 +120,15 @@ return [
     */
 
     'lines' => env('AEGIS_LINES', 7),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sampling Rate
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of sampling rate, in decimal.
+    |
+    */
+
+    'rate' => env('AEGIS_RATE', 0.1),
 ];

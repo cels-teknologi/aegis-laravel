@@ -34,7 +34,22 @@ class Aegis
             return false;
         }
 
+        if ($this->isRateLimited()) {
+            return false;
+        }
+
         return $this->client->report(new Record($exception));
+    }
+
+    /**
+     * Whether the current environment allows reporting.
+     *
+     * @return bool
+     */
+    public function isRateLimited(): bool
+    {
+        $rate = (int) (((float) config('aegis.rate')) * 100);
+        return \random_int(0, 99) >= $rate;
     }
 
     /**
