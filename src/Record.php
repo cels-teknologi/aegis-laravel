@@ -162,8 +162,8 @@ class Record implements Arrayable
 
             'variables' => [
                 'ua_string' => Request::server('HTTP_USER_AGENT'),
-                'server_addr' => Request::server('SERVER_ADDR'),
-                'remote_addr' => Request::server('REMOTE_ADDR'),
+                'host_ip' => Request::server('SERVER_ADDR'),
+                'client_ip' => Request::server('REMOTE_ADDR'),
             ],
         ];
 
@@ -196,7 +196,7 @@ class Record implements Arrayable
         }
 
         if ($hostname = \gethostname()) {
-            $data['variables']['hostname'] = $hostname;
+            $data['variables']['host_name'] = $hostname;
         }
 
         if ($this->exception instanceof AegisExceptionInterface) {
