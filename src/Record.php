@@ -102,7 +102,7 @@ class Record implements Arrayable
                 'args' => null,
                 'file' => Str::replaceFirst(
                     base_path(),
-                    DIRECTORY_SEPARATOR,
+                    '',
                     $trace['file'],
                 ),
             ]));
