@@ -189,14 +189,19 @@ class Record implements Arrayable
     {
         $user = Request::user();
 
+        $release = config('aegis.release');
+        if (empty($release)) {
+            $release = $this->guessRelease();
+        }
+
         $data = [
             'environment' => App::environment(),
 
             'method' => Request::method(),
             'fullUrl' => Request::fullUrl(),
 
-            'release' => config('aegis.release', $this->guessRelease()),
-            'dist' => config('aegis.dist', null),
+            'release' => $release,
+            'dist' => config('aegis.dist'),
 
             'exception' => $this->formatException(),
 
