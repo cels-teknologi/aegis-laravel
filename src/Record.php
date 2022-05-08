@@ -121,7 +121,7 @@ class Record implements Arrayable
         $formatted = [
             'type' => \get_class($this->exception),
             'message' => $this->exception->getMessage(),
-            'traces' => $this->generateTraces(),
+            'traces' => $this->formatTraces(),
             'code' => $this->exception->getCode(),
             'file' => [
                 'name' => $this->exception->getFile(),
