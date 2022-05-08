@@ -196,7 +196,7 @@ class Record implements Arrayable
         }
 
         if ($hostname = \gethostname()) {
-            $data['vars_hostname'] = $hostname;
+            $data['variables']['hostname'] = $hostname;
         }
 
         if ($this->exception instanceof AegisExceptionInterface) {
