@@ -44,6 +44,8 @@ return [
     | Here you may specify the versioning scheme used in your project to track
     | exceptions and possible fixes or regressions.
     |
+    | Leave it by default to automatically fetch with Git commit SHA
+    |
     */
 
     'release' => env('AEGIS_RELEASE'),

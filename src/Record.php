@@ -161,6 +161,26 @@ class Record implements Arrayable
     }
 
     /**
+     * Guess the release of application using Git's commit SHA
+     * 
+     * @return string|null The commit string.
+     */
+    public function guessRelease()
+    {
+        $path = base_path('.git/');
+
+        if (!file_exists($path)) {
+            return null;
+        }
+    
+        $head = trim(substr(file_get_contents($path . 'HEAD'), 4));
+    
+        $hash = trim(file_get_contents(sprintf($path . $head)));
+    
+        return $hash;
+    }
+
+    /**
      * Get the exception instance as an array.
      *
      * @return array
@@ -175,7 +195,7 @@ class Record implements Arrayable
             'method' => Request::method(),
             'fullUrl' => Request::fullUrl(),
 
-            'release' => config('aegis.release', null),
+            'release' => config('aegis.release', $this->guessRelease()),
             'dist' => config('aegis.dist', null),
 
             'exception' => $this->formatException(),
