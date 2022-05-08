@@ -83,11 +83,11 @@ class Record implements Arrayable
                 continue;
             }
 
-            if (empty($content[$idx])) {
+            if (empty(\trim($content[$idx]))) {
                 continue;
             }
 
-            $preview[] = [$currentLine, \trim($content[$idx]), ];
+            $preview[] = [$currentLine, \trim($content[$idx], "\n\r"), ];
         }
 
         return $preview;
