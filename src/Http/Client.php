@@ -42,7 +42,7 @@ class Client implements ClientWrapperInterface
     {
         try {
             return $this->getGuzzleHttpClient()
-                ->request('POST', config('aegis.http.endpoint'), [
+                ->requestAsync('POST', config('aegis.http.endpoint'), [
                     'headers' => [
                         'Authorization' => "Basic {$this->auth}",
                         'Accept' => 'application/json',
