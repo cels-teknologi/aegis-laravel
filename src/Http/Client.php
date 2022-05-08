@@ -46,6 +46,7 @@ class Client implements ClientWrapperInterface
                     'headers' => [
                         'Authorization' => "Basic {$this->auth}",
                         'Accept' => 'application/json',
+                        'Content-Type' => 'application/json',
                         'User-Agent' => 'Aegis-PHP-Client/1.0',
                     ],
                     'json' => $record->toArray(),
