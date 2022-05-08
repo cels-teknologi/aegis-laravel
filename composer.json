@@ -1,5 +1,5 @@
 {
-  "name": "cels-teknologi/aegis-php",
+  "name": "cels-teknologi/aegis-laravel",
   "description": "Laravel 8.x - 9.x exception handler",
   "require": {
     "php": "^7.3|^8.0",
