@@ -100,7 +100,7 @@ class Record implements Arrayable
         );
 
         $formatted = [
-            'classname' => \get_class($this->exception),
+            'type' => \get_class($this->exception),
             'message' => $this->exception->getMessage(),
             'traces' => $this->exception->getTrace(),
             'code' => $this->exception->getCode(),
