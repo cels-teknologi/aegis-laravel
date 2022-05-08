@@ -86,10 +86,29 @@ class Record implements Arrayable
                 continue;
             }
 
-            $preview[] = [$currentLine, $content[$idx], ];
+            $preview[] = [$currentLine, \trim($content[$idx]), ];
         }
 
         return $preview;
+    }
+
+    public function formatTraces(): array
+    {
+        $traces = [];
+
+        foreach ($this->exception->getTrace() as $trace) {
+            $traces[] = \array_filter(\array_merge($trace, [
+                'type' => null,
+                'args' => null,
+                'file' => Str::replaceFirst(
+                    base_path(),
+                    DIRECTORY_SEPARATOR,
+                    $trace['file'],
+                ),
+            ]));
+        }
+
+        return $traces;
     }
 
     public function formatException(): array
@@ -102,7 +121,7 @@ class Record implements Arrayable
         $formatted = [
             'type' => \get_class($this->exception),
             'message' => $this->exception->getMessage(),
-            'traces' => $this->exception->getTrace(),
+            'traces' => $this->generateTraces(),
             'code' => $this->exception->getCode(),
             'file' => [
                 'name' => $this->exception->getFile(),
