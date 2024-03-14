@@ -7,7 +7,7 @@ use Illuminate\Log\LogManager;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use Monolog\Logger;
 
-class ServiceProvider extends BaseServiceProvider
+class AegisServiceProvider extends BaseServiceProvider
 {
     /**
      * Bootstrap the application events.
