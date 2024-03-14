@@ -31,6 +31,7 @@ class Aegis
      */
     public function handle(
         int $psr3Level,
+        $message = '',
         $context = [],
         $extra = [],
     ) {
@@ -50,6 +51,7 @@ class Aegis
         if (!$onlyThrowables || $isThrowable) {
             return $this->client->report(new Record(
                 $psr3Level,
+                $message,
                 $context,
                 $extra,
                 $isThrowable ? $context['exception'] : null,

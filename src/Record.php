@@ -18,6 +18,7 @@ class Record implements Arrayable
 
     public function __construct(
         protected int $psr3Level = 100,
+        protected string $message,
         protected array $context,
         protected array $extra,
         protected ?\Throwable $exception = null,
@@ -150,16 +151,16 @@ class Record implements Arrayable
         return $formatted;
     }
 
-    /**
-     * Get the exception identifier to determine uniqueness.
-     *
-     * @return array
-     */
-    public function generateKey(): string
-    {
-        $data = $this->toArray();
-        return "aegis___{$data['classname']}_{$data['message']}_{$data['line']}_{$data['file_name']}";
-    }
+    // /**
+    //  * Get the exception identifier to determine uniqueness.
+    //  *
+    //  * @return array
+    //  */
+    // public function generateKey(): string
+    // {
+    //     $data = $this->toArray();
+    //     return "aegis___{$data['classname']}_{$data['message']}_{$data['line']}_{$data['file_name']}";
+    // }
 
     /**
      * Guess the release of application using Git's commit SHA
@@ -203,6 +204,7 @@ class Record implements Arrayable
             'release' => $release,
             'dist' => Config::get('aegis.dist'),
 
+            'message' => $this->message,
             'exception' => $this->exception ? $this->formatException() : null,
             'context' => $this->context,
             'extra' => $this->extra,

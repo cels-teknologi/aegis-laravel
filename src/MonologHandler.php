@@ -26,6 +26,7 @@ class MonologHandler extends AbstractProcessingHandler
     {
         $this->aegis->handle(
             $record['level'],
+            $record['message'],
             $record['context'],
             $record['extra'],
         );
