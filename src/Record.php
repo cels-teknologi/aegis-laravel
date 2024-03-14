@@ -4,6 +4,7 @@ namespace Cels\Aegis;
 
 use Cels\Aegis\Contracts\Aegisable;
 use Cels\Aegis\Contracts\AegisExceptionInterface;
+use Illuminate\Container\Container;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Model;
@@ -29,12 +30,12 @@ class Record implements Arrayable
             'file' => $this->exception->getFile(),
             'line' => $this->exception->getLine(),
         ];
-        $ignores = [];
+        $ignores = [App::basePath('vendor')];
         $finished = false;
         $traces = \array_merge([$cause, ], $this->exception->getTrace());
 
         foreach (Config::get('aegis.ignore') as $ignore) {
-            $ignores[] = base_path($ignore);
+            $ignores[] = App::basePath($ignore);
         }
 
         foreach ($traces as $trace) {
@@ -99,7 +100,7 @@ class Record implements Arrayable
                 'type' => null,
                 'args' => null,
                 'file' => Str::replaceFirst(
-                    base_path(),
+                    App::basePath(),
                     '',
                     $trace['file'],
                 ),
@@ -164,7 +165,7 @@ class Record implements Arrayable
      */
     public function guessRelease()
     {
-        $path = base_path('.git/');
+        $path = App::basePath('.git/');
 
         if (!file_exists($path)) {
             return null;
@@ -184,14 +185,13 @@ class Record implements Arrayable
      */
     public function toArray()
     {
-        $user = Request::user();
-
         $release = Config::get('aegis.release');
         if (empty($release)) {
             $release = $this->guessRelease();
         }
 
         $data = [
+            'collect' => [], 
             'environment' => App::environment(),
 
             'method' => Request::method(),
@@ -209,33 +209,37 @@ class Record implements Arrayable
             ],
         ];
 
-        if ($user && Config::get('aegis.user.collect', true)) {
+        $collects = [];
+        if (Config::get('aegis.collect.env', false)) {
+            $collects['env'] = [...$_ENV];
+        }
+        if (($user = Request::user()) && Config::get('aegis.collect.user', true)) {
             if ($user instanceof Aegisable) {
-                $data['user'] = $user->toAegis();
+                $collects['user'] = $user->toAegis();
             }
-            elseif (\is_array($user)) {
-                $data['user'] = $user;
+            else if (\is_array($user)) {
+                $collects['user'] = $user;
             }
-            elseif ($user instanceof Arrayable || \method_exists($user, 'toArray')) {
-                $data['user'] = $user->toArray();
+            else if ($user instanceof Arrayable || \method_exists($user, 'toArray')) {
+                $collects['user'] = $user->toArray();
             }
-            elseif (\method_exists($user, 'getKey')) {
-                $data['user'] = ['id' => $user->getKey(), ];
+            else if (\method_exists($user, 'getKey')) {
+                $collects['user'] = ['id' => $user->getKey()];
             }
-            elseif (Config::get('aegis.user.force', true)) {
+            else if (Config::get('aegis.user.force', true)) {
                 if ($user instanceof Jsonable) {
-                    $data['user'] = \json_decode($user->toJson(), true);
+                    $collects['user'] = \json_decode($user->toJson(), true);
                 }
                 else {
                     try {
-                        $stringified = $user . '';
-                        $data['user'] = $stringified;
+                        $collects['user'] = $user . '';
                     }
                     finally {
                     }
                 }
             }
         }
+        $data['collects'] = $collects;
 
         if ($hostname = \gethostname()) {
             $data['variables']['host_name'] = $hostname;
@@ -247,7 +251,10 @@ class Record implements Arrayable
             $merge['extra'] = $this->exception->getExtraMetadata();
             $merge['tags'] = $this->exception->getTags();
 
-            $data = \array_merge($data, \array_filter($merge));
+            $data = [
+                ...$data,
+                ...\array_filter($merge),
+            ];
         }
 
         return $data;

@@ -74,7 +74,7 @@ return [
     'http' => [
         'base_uri' => env('AEGIS_BASE_URI', 'https://aegis.cels.co.id/'),
         'endpoint' => env('AEGIS_ENDPOINT', '/api/report'),
-        'verify_ssl' => !!env('AEGIS_VERIFY_SSL', true),
+        'verify_ssl' => (bool) env('AEGIS_VERIFY_SSL', true),
         'timeout' => 10,
     ],
 
@@ -90,9 +90,9 @@ return [
     |
     */
 
-    'user' => [
-        'collect' => true,
-        'force' => false,
+    'collect' => [
+        'env' => false,
+        'user' => (bool) env('AEGIS_COLLECT_USER', true),
     ],
 
     /*
@@ -101,23 +101,21 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the folders to ignore, use relative paths from the
-    | project directory.
-    |
-    | If you're not sure, the default value is good enough.
+    | project root directory.
+    | 
+    | Files in ignored directories are still logged but will not be considered
+    | as the "error-source" (a.k.a. your code that causes an exception).
     |
     */
 
-    'ignore' => [
-        'vendor',
-    ],
+    'ignore' => env('AEGIS_IGNORE_DIRECTORIES', ''),
 
     /*
     |--------------------------------------------------------------------------
     | Lines
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the number of lines before & after the exception
-    | instantiated.
+    | Here you may specify the number of lines before & after for file preview.
     |
     */
 
