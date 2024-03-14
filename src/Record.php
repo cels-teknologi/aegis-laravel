@@ -127,7 +127,11 @@ class Record implements Arrayable
             'traces' => $this->formatTraces(),
             'code' => $this->exception->getCode(),
             'file' => [
-                'name' => $this->exception->getFile(),
+                'name' => Str::replaceFirst(
+                    App::basePath(),
+                    '',
+                    $this->exception->getFile(),
+                ),
                 'line' => $this->exception->getLine(),
                 'hash' => \hash_file('md5', $this->exception->getFile()),
                 'preview' => $preview,
@@ -141,7 +145,11 @@ class Record implements Arrayable
             );
 
             $formatted['cause'] = [
-                'name' => $this->cause['file'],
+                'name' => Str::replaceFirst(
+                    App::basePath(),
+                    '',
+                    $this->cause['file'],
+                ),
                 'line' => $this->cause['line'],
                 'hash' => \hash_file('md5', $this->cause['file']),
                 'preview' => $causePreview,
