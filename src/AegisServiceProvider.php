@@ -16,7 +16,7 @@ class AegisServiceProvider extends BaseServiceProvider
     {
         $this->publishes([
             __DIR__ . '/../stubs/config/aegis.php' => config_path('aegis.php'),
-        ]);
+        ], 'aegis-config');
 
         // $this->loadViewsFrom(__DIR__ . '/../resources/views', 'aegis');
     }
