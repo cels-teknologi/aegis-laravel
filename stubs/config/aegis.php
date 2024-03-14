@@ -108,7 +108,7 @@ return [
     |
     */
 
-    'ignore' => env('AEGIS_IGNORE_DIRECTORIES', ''),
+    'ignore' => \explode(',', env('AEGIS_IGNORE_DIRECTORIES', '')),
 
     /*
     |--------------------------------------------------------------------------
