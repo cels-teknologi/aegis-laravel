@@ -19,6 +19,9 @@ class Client implements ClientWrapperInterface
     /** @var string The Aegis project authentication token. */
     protected $token;
 
+    /** @var string The Aegis project authentication token. */
+    protected $auth;
+
     /**
      * @param string $project The project slug.
      * @param string $token The project authentication token.
