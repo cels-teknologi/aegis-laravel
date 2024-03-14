@@ -8,33 +8,43 @@ return [
     |--------------------------------------------------------------------------
     |
     | This is your project details which is used for authentication.
-    | It contains a project slug name in the form of {team}-{project-name}
-    | and a token which contains at least 128 characters.
+    | It contains a project key and a token.
     |
     | Check your project details by visiting https://aegis.cels.co.id.
     |
     */
 
     'project' => [
-        'slug' => env('AEGIS_PROJECT_SLUG'),
+        'key' => env('AEGIS_PROJECT_KEY'),
         'token' => env('AEGIS_PROJECT_TOKEN'),
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Environment
+    | Report
     |--------------------------------------------------------------------------
     |
-    | Here you may specify which environment Aegis will handle exceptions
-    | for reporting.
-    |
-    | If you're not sure, set this to the same value of APP_ENV variable.
+    | Here you may specify Aegis reporting settings:
+    |  - only_throwables: Only report if it is an instance of \Throwable,
+    |                     default is true.
+    |  - environments: Environments Aegis should handle logging,
+    |                  separated by commas, default is 'production'.
+    |  - rate: The sampling rate in decimal
+    |          of Log::() calls to report, e.g.
+    |     - 0.1 means 10% (default)
+    |     - 0 means to never report
+    |     - 1 means to always report
     |
     */
 
-    'environments' => [
-        env('APP_ENV', 'production'),
-    ],
+    'only_throwables' => true,
+    'environments' => \explode(',', env('AEGIS_REPORT_ENV', 'production')),
+    'rate' => env(
+        'AEGIS_RATE',
+        env('APP_ENV', 'production') === 'production'
+            ? 0.1
+            : 0,
+    ),
 
     /*
     |--------------------------------------------------------------------------
@@ -80,13 +90,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | User Data Collection
+    | Data Collection
     |--------------------------------------------------------------------------
     |
-    | Here you may toggle the data collection performed for currently
-    | authenticated user.
-    |
-    | If you're not sure, the default value is good enough.
+    | Here you may configure the data collection performed when reporting.
     |
     */
 
@@ -121,22 +128,4 @@ return [
 
     'lines' => env('AEGIS_LINES', 15),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Sampling Rate
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the number of sampling rate, in decimal.
-    |
-    | The default value will report 10% of all exceptions in production,
-    | otherwise 0%.
-    |
-    */
-
-    'rate' => env(
-        'AEGIS_RATE',
-        env('APP_ENV', 'production') === 'production'
-            ? 0.1
-            : 0,
-    ),
 ];

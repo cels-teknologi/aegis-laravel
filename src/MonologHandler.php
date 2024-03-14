@@ -24,13 +24,10 @@ class MonologHandler extends AbstractProcessingHandler
      */
     protected function write($record): void
     {
-        if (\array_key_exists('exception', $record['context'])
-            && isset($record['context']['exception'])
-            && $record['context']['exception'] instanceof \Throwable
-        ) {
-            $this->aegis->handle($record['context']['exception']);
-
-            return;
-        }
+        $this->aegis->handle(
+            $record['level'],
+            $record['context'],
+            $record['extra'],
+        );
     }
 }

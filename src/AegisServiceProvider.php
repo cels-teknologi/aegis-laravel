@@ -34,7 +34,7 @@ class AegisServiceProvider extends BaseServiceProvider
             $credentials = $app['config']['aegis']['project'];
 
             return new Aegis(
-                new AegisClient($credentials['slug'], $credentials['token'])
+                new AegisClient($credentials['key'], $credentials['token'])
             );
         });
 

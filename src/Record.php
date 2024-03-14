@@ -16,10 +16,15 @@ class Record implements Arrayable
     /** @var array The probable root cause of exception. */
     protected $cause;
 
-    public function __construct(protected \Throwable $exception)
-    {
-        $this->exception = $exception;
-        $this->cause = $this->determineCause();
+    public function __construct(
+        protected int $psr3Level = 100,
+        protected array $context,
+        protected array $extra,
+        protected ?\Throwable $exception = null,
+    ) {
+        if ($this->exception) {
+            $this->cause = $this->determineCause();
+        }
     }
 
     public function determineCause(): array
@@ -189,6 +194,7 @@ class Record implements Arrayable
         }
 
         $data = [
+            'level' => $this->psr3Level,
             'environment' => App::environment(),
 
             'method' => Request::method(),
@@ -197,7 +203,9 @@ class Record implements Arrayable
             'release' => $release,
             'dist' => Config::get('aegis.dist'),
 
-            'exception' => $this->formatException(),
+            'exception' => $this->exception ? $this->formatException() : null,
+            'context' => $this->context,
+            'extra' => $this->extra,
 
             'variables' => [
                 'ua_string' => Request::server('HTTP_USER_AGENT'),

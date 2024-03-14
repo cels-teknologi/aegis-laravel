@@ -23,13 +23,17 @@ class Aegis
     /**
      * Handle any caught throwables.
      *
-     * @param \Throwable $exception The caught throwable exception.
-     * @param array $tags Additional tags.
-     * @param array $extras Additional metadata to store.
-     * @return mixed|null
+     * @param  int  $psr3Level
+     * @param  \Throwable  $exception  The caught throwable exception.
+     * @param  array  $context  Log context.
+     * @param  array  $extra  Additional metadata to store.
+     * @return  mixed|null
      */
-    public function handle(\Throwable $exception)
-    {
+    public function handle(
+        int $psr3Level,
+        $context = [],
+        $extra = [],
+    ) {
         if (!$this->reportableEnvironment()) {
             return false;
         }
@@ -38,7 +42,19 @@ class Aegis
             return false;
         }
 
-        return $this->client->report(new Record($exception));
+        $isThrowable = (\array_key_exists('exception', $context)
+            && isset($context['exception'])
+            && $context['exception'] instanceof \Throwable
+        );
+        $onlyThrowables = Config::get('aegis.only_throwables', false);
+        if (!$onlyThrowables || $isThrowable) {
+            return $this->client->report(new Record(
+                $psr3Level,
+                $context,
+                $extra,
+                $isThrowable ? $context['exception'] : null,
+            ));
+        }
     }
 
     /**

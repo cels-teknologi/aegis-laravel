@@ -13,28 +13,20 @@ class Client implements ClientWrapperInterface
 {
     use GuzzleHttpClientHelpers;
 
-    /** @var string The Aegis project slug. */
-    protected $project;
-
-    /** @var string The Aegis project authentication token. */
-    protected $token;
-
-    /** @var string The Aegis project authentication token. */
+    /** @var string The Aegis project authentication. */
     protected $auth;
 
     /**
-     * @param string $project The project slug.
+     * @param string $key The project authentication key.
      * @param string $token The project authentication token.
      */
     public function __construct(
-        string $project,
-        string $token,
+        protected string $key,
+        protected string $token,
         ClientInterface $client = null,
     ) {
         $this->client = $client;
-        $this->project = $project;
-        $this->token = $token;
-        $this->auth = \base64_encode("{$project}:{$token}");
+        $this->auth = \base64_encode("{$key}:{$token}");
     }
 
     /**
