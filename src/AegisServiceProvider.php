@@ -26,7 +26,7 @@ class AegisServiceProvider extends BaseServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/aegis.php', 'aegis');
+        $this->mergeConfigFrom(__DIR__ . '/../stubs/config/aegis.php', 'aegis');
 
         $this->app->singleton('aegis', function ($app) {
             $credentials = $app['config']['aegis']['project'];
