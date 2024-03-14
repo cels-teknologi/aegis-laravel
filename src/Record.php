@@ -4,10 +4,8 @@ namespace Cels\Aegis;
 
 use Cels\Aegis\Contracts\Aegisable;
 use Cels\Aegis\Contracts\AegisExceptionInterface;
-use Illuminate\Container\Container;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Request;
@@ -191,7 +189,6 @@ class Record implements Arrayable
         }
 
         $data = [
-            'collect' => [], 
             'environment' => App::environment(),
 
             'method' => Request::method(),
