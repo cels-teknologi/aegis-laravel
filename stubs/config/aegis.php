@@ -83,7 +83,7 @@ return [
 
     'http' => [
         'base_uri' => env('AEGIS_BASE_URI', 'https://aegis.cels.co.id/'),
-        'endpoint' => env('AEGIS_ENDPOINT', '/api/_report'),
+        'endpoint' => env('AEGIS_ENDPOINT', '/api/_report/monolog'),
         'verify_ssl' => (bool) env('AEGIS_VERIFY_SSL', true),
         'timeout' => 10,
     ],
