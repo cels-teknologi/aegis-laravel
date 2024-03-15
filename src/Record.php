@@ -229,30 +229,27 @@ class Record implements Arrayable
             $collects['env'] = [...$_ENV];
         }
         if (($user = Request::user()) && Config::get('aegis.collect.user', true)) {
-            if ($user instanceof Aegisable) {
-                $collects['user'] = $user->toAegis();
-            }
-            else if (\is_array($user)) {
-                $collects['user'] = $user;
-            }
-            else if ($user instanceof Arrayable || \method_exists($user, 'toArray')) {
-                $collects['user'] = $user->toArray();
-            }
-            else if (\method_exists($user, 'getKey')) {
-                $collects['user'] = ['id' => $user->getKey()];
-            }
-            else if (Config::get('aegis.user.force', true)) {
-                if ($user instanceof Jsonable) {
+            try {
+                if ($user instanceof Aegisable) {
+                    $collects['user'] = $user->toAegis();
+                }
+                else if (\is_array($user)) {
+                    $collects['user'] = $user;
+                }
+                else if ($user instanceof Arrayable || \method_exists($user, 'toArray')) {
+                    $collects['user'] = $user->toArray();
+                }
+                else if (\method_exists($user, 'getKey')) {
+                    $collects['user'] = ['id' => $user->getKey()];
+                }
+                else if ($user instanceof Jsonable) {
                     $collects['user'] = \json_decode($user->toJson(), true);
                 }
                 else {
-                    try {
-                        $collects['user'] = $user . '';
-                    }
-                    finally {
-                    }
+                    $collects['user'] = $user . '';
                 }
             }
+            finally { }
         }
         $data['collects'] = $collects;
 

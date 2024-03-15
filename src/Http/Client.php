@@ -49,7 +49,7 @@ class Client implements ClientWrapperInterface
                     'verify' => Config::get('aegis.http.verify_ssl', true),
                 ]);
         }
-        catch (\Exception $e) {
+        catch (\Throwable $e) {
             Log::emergency($e);
         }
     }
