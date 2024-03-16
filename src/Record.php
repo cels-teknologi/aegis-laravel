@@ -218,6 +218,10 @@ class Record implements Arrayable
             'extra' => $this->extra,
 
             'variables' => [
+                'version' => [
+                    'laravel' => App::version(),
+                    'php' => PHP_VERSION,
+                ],
                 'ua_string' => Request::server('HTTP_USER_AGENT'),
                 'host_ip' => Request::server('SERVER_ADDR'),
                 'client_ip' => Request::server('REMOTE_ADDR'),
