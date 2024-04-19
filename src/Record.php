@@ -135,9 +135,10 @@ class Record implements Arrayable
         $backtrace = \debug_backtrace(0);
         $raw = \array_merge(
             // The first ($i = 0) gets ignored, this is just to shift filenames...
-            $this->throwable ? [[
+            [$this->throwable ? [
                 'file' => $this->throwable->getFile(),
-            ]] : [[
+                'line' => $this->throwable->getLine(),
+            ] : [
                 'file' => '{unknown}',
             ]],
             $this->throwable ? $this->throwable->getTrace() : $backtrace,
@@ -153,6 +154,12 @@ class Record implements Arrayable
             }
 
             $hasFile = \array_key_exists('file', $raw[$i - 1]);
+            $file = null;
+            try {
+                $file = new File($raw[$i - 1]['file']);
+            }
+            catch (\Throwable $e) { }
+
             $paths = $hasFile
                 ? \array_values(\array_filter(\preg_split('/[\\\\\/]/', File::relativePathOf($raw[$i - 1]['file']))))
                 : ['{unknown}'];
@@ -162,9 +169,8 @@ class Record implements Arrayable
                 $overwrite['cause'] = 1;
             }
             $traces[] = \array_filter(\array_merge([
-                'preview' => $hasFile && \array_key_exists('line', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
-                    ? (new File($raw[$i - 1]['file']))
-                        ->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
+                'preview' => $hasFile && \array_key_exists('line', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0 && $file
+                    ? $file->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
                     : [],
             ], $trace, $overwrite));
         }

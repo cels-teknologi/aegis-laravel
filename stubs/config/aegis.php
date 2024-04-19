@@ -37,7 +37,7 @@ return [
     |
     */
 
-    'only_throwables' => true,
+    'only_throwables' => 0,
     'environments' => \explode(',', env('AEGIS_REPORT_ENV', 'production')),
     'rate' => env(
         'AEGIS_RATE',

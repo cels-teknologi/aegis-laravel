@@ -43,7 +43,7 @@ class Aegis
             && isset($context['exception'])
             && $context['exception'] instanceof \Throwable
         );
-        $onlyThrowables = Config::get('aegis.only_throwables', false);
+        $onlyThrowables = (bool) Config::get('aegis.only_throwables', false);
         $record = new Record(
             $message,
             $context,
@@ -61,12 +61,13 @@ class Aegis
 
         Cache::set($record->generateKey(), $r + 1);
 
-        if (!$onlyThrowables || $isThrowable) {
-            return $this->client->report($record, [
-                'rate' => (int) (((float) Config::get('aegis.rate')) * 100),
-                'occurence' => $r + 1,
-            ]);
+        if ($onlyThrowables && !$isThrowable) {
+            return;
         }
+        return $this->client->report($record, [
+            'rate' => (int) (((float) Config::get('aegis.rate')) * 100),
+            'occurence' => $r + 1,
+        ]);
     }
 
     /**
