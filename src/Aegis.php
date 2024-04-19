@@ -5,6 +5,7 @@ namespace Cels\Aegis;
 use Cels\Aegis\Contracts\ClientWrapperInterface;
 use Cels\Aegis\Http\Client;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
 class Aegis
@@ -39,23 +40,33 @@ class Aegis
             return false;
         }
 
-        if ($this->isRateLimited()) {
-            return false;
-        }
-
         $isThrowable = (\array_key_exists('exception', $context)
             && isset($context['exception'])
             && $context['exception'] instanceof \Throwable
         );
         $onlyThrowables = Config::get('aegis.only_throwables', false);
+        $record = new Record(
+            $psr3Level,
+            $message,
+            $context,
+            $extra,
+            $isThrowable ? $context['exception'] : null,
+        );
+
+        $r = 0;
+        if ($r = (int) Cache::get($record->generateKey())) {
+            if ($this->isRateLimited()) {
+                return false;
+            }
+        }
+
+        Cache::set($record->generateKey(), $r + 1);
+
         if (!$onlyThrowables || $isThrowable) {
-            return $this->client->report(new Record(
-                $psr3Level,
-                $message,
-                $context,
-                $extra,
-                $isThrowable ? $context['exception'] : null,
-            ));
+            return $this->client->report($record, [
+                'rate' => (int) (((float) Config::get('aegis.rate')) * 100),
+                'occurence' => $r + 1,
+            ]);
         }
     }
 

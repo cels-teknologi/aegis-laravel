@@ -159,16 +159,17 @@ class Record implements Arrayable
         return $formatted;
     }
 
-    // /**
-    //  * Get the exception identifier to determine uniqueness.
-    //  *
-    //  * @return array
-    //  */
-    // public function generateKey(): string
-    // {
-    //     $data = $this->toArray();
-    //     return "aegis___{$data['classname']}_{$data['message']}_{$data['line']}_{$data['file_name']}";
-    // }
+    /**
+     * Get the exception identifier to determine uniqueness.
+     *
+     * @return string
+     */
+    public function generateKey(): string
+    {
+        $classname = $this->exception ? \get_class($this->exception) : 'Log';
+        
+        return "aegis___{$classname}_{$this->cause['file']}_{$this->cause['line']}";
+    }
 
     /**
      * Guess the release of application using Git's commit SHA

@@ -12,7 +12,7 @@ interface ClientWrapperInterface
      *
      * @param Record $record The exception data being handled.
      */
-    public function report(Record $record);
+    public function report(Record $record, array $data = []);
 
     /**
      * Get the GuzzleHTTP Client instance currently in use, or create one if it doesn't exist.

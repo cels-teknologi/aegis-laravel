@@ -34,7 +34,7 @@ class Client implements ClientWrapperInterface
      *
      * @param Record $record The exception data being handled.
      */
-    public function report(Record $record)
+    public function report(Record $record, array $data = [])
     {
         try {
             return $this->getGuzzleHttpClient()
@@ -45,12 +45,15 @@ class Client implements ClientWrapperInterface
                         'Content-Type' => 'application/json',
                         'User-Agent' => 'Aegis-PHP-Client/1.0',
                     ],
-                    'json' => $record->toArray(),
+                    'json' => [
+                        ...$record->toArray(),
+                        'aegis' => $data,
+                    ],
                     'verify' => Config::get('aegis.http.verify_ssl', true),
                 ]);
         }
         catch (\Throwable $e) {
-            Log::emergency($e);
+            Log::channel('emergency')->emergency($e);
         }
     }
 }
