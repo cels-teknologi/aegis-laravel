@@ -172,7 +172,7 @@ class Record implements Arrayable
         }
 
         if (!$cause) {
-            $traces[0]['cause'] = true;
+            $traces[0]['cause'] = 1;
         }
 
         return $traces;
