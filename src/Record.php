@@ -4,6 +4,8 @@ namespace Cels\Aegis;
 
 use Cels\Aegis\Contracts\Aegisable;
 use Cels\Aegis\Contracts\AegisExceptionInterface;
+use Cels\Aegis\Helpers\File;
+use Cels\Aegis\Helpers\Git;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Facades\App;
@@ -14,198 +16,33 @@ use Monolog\Logger;
 
 class Record implements Arrayable
 {
-    /** @var array The probable root cause of exception. */
-    protected $cause;
+    protected Git $git;
+    protected $traces;
 
     public function __construct(
         protected string $message,
         protected array $context,
         protected array $extra,
-        protected ?\Throwable $exception = null,
+        protected ?\Throwable $throwable = null,
         protected int $psr3Level = 100,
     ) {
-        if ($this->exception) {
-            $this->cause = $this->determineCause();
-        }
-    }
-
-    public function determineCause(): array
-    {
-        $cause = [
-            'file' => $this->exception->getFile(),
-            'line' => $this->exception->getLine(),
-        ];
-        $ignores = [App::basePath('vendor')];
-        $finished = false;
-        $traces = \array_merge([$cause, ], $this->exception->getTrace());
-
-        foreach (Config::get('aegis.ignore') as $ignore) {
-            $ignores[] = App::basePath($ignore);
-        }
-
-        foreach ($traces as $trace) {
-            $path = $trace['file'];
-            foreach ($ignores as $ignore) {
-                if (Str::startsWith($path, $ignore)) {
-                    continue;
-                }
-
-                $cause = [
-                    'file' => $path,
-                    'line' => $trace['line'],
-                ];
-                $finished = true;
-                break;
-            }
-
-            if ($finished) {
-                break;
-            }
-        }
-
-        return $cause;
+        $this->git = new Git;
+        $this->traces = $this->buildTraces();
     }
 
     /**
-     * Get the exception identifier to determine uniqueness.
-     *
-     * @return array
-     */
-    public function generateCodePreview($file, $line): array
-    {
-        $preview = [];
-        $lines = \abs((int) Config::get('aegis.lines', 15));
-        $content = \file($file);
-        $max = \count($content);
-        if ($line > 15 && $max - $line < 15) {
-            $line = \max(1, $max - 15);
-        }
-
-        for ($i = -1 * $lines; $i <= $lines; $i++) {
-            $currentLine = $line + $i;
-            $idx = $currentLine - 1;
-
-            if ($idx < 0 || $currentLine > count($content)) {
-                continue;
-            }
-
-            if (empty(\trim($content[$idx]))) {
-                continue;
-            }
-
-            $preview[] = [$currentLine, \trim($content[$idx], "\n\r"), ];
-        }
-
-        return $preview;
-    }
-
-    public function formatTraces(): array
-    {
-        $traces = [];
-
-        foreach ($this->exception->getTrace() as $trace) {
-            $traces[] = \array_filter(\array_merge($trace, [
-                'type' => null,
-                'args' => null,
-                'file' => Str::replaceFirst(
-                    App::basePath(),
-                    '',
-                    $trace['file'],
-                ),
-            ]));
-        }
-
-        return $traces;
-    }
-
-    public function formatException(): array
-    {
-        $preview = $this->generateCodePreview(
-            $this->exception->getFile(),
-            $this->exception->getLine(),
-        );
-
-        $formatted = [
-            'type' => \get_class($this->exception),
-            'message' => $this->exception->getMessage(),
-            'traces' => $this->formatTraces(),
-            'code' => $this->exception->getCode(),
-            'file' => [
-                'name' => Str::replaceFirst(
-                    App::basePath(),
-                    '',
-                    $this->exception->getFile(),
-                ),
-                'line' => $this->exception->getLine(),
-                'hash' => \hash_file('md5', $this->exception->getFile()),
-                'preview' => $preview,
-            ],
-        ];
-
-        if ($this->cause['file'] !== $this->exception->getFile()) {
-            $causePreview = $this->generateCodePreview(
-                $this->cause['file'],
-                $this->cause['line'],
-            );
-
-            $formatted['cause'] = [
-                'name' => Str::replaceFirst(
-                    App::basePath(),
-                    '',
-                    $this->cause['file'],
-                ),
-                'line' => $this->cause['line'],
-                'hash' => \hash_file('md5', $this->cause['file']),
-                'preview' => $causePreview,
-            ];
-        }
-
-        return $formatted;
-    }
-
-    /**
-     * Get the exception identifier to determine uniqueness.
+     * Get the throwable identifier to determine uniqueness.
      *
      * @return string
      */
     public function generateKey(): string
     {
-        $levelName = \mb_strtolower(
-            \class_exists('\\Monolog\\Level')
-                ? \Monolog\Level::from($this->psr3Level)->name
-                : Logger::getLevelName($this->psr3Level)
-        );
-        $className = $this->exception
-            ? \get_class($this->exception)
-            : \get_class(App::make('log'));
-        $cause = $this->cause
-            ? "{$this->cause['file']}:{$this->cause['line']}"
-            : 'Log';
-        return "aegis___{$levelName}_{$className}_{$cause}";
+        $jsonEncoded = \json_encode($this->traces[0]);
+        return "aegis___{$jsonEncoded}";
     }
 
     /**
-     * Guess the release of application using Git's commit SHA
-     * 
-     * @return string|null The commit string.
-     */
-    public function guessRelease()
-    {
-        $path = App::basePath('.git/');
-
-        if (!file_exists($path)) {
-            return null;
-        }
-    
-        $head = trim(substr(file_get_contents($path . 'HEAD'), 4));
-    
-        $hash = trim(file_get_contents(sprintf($path . $head)));
-    
-        return $hash;
-    }
-
-    /**
-     * Get the exception instance as an array.
+     * Get the throwable instance as an array.
      *
      * @return array
      */
@@ -213,7 +50,7 @@ class Record implements Arrayable
     {
         $release = Config::get('aegis.release');
         if (empty($release)) {
-            $release = $this->guessRelease();
+            $release = $this->git->hash();
         }
 
         $data = [
@@ -227,7 +64,8 @@ class Record implements Arrayable
             'dist' => Config::get('aegis.dist'),
 
             'message' => $this->message,
-            'exception' => $this->exception ? $this->formatException() : null,
+            'throwable' => !! $this->throwable,
+            'traces' => $this->traces,
             'context' => $this->context,
             'extra' => $this->extra,
 
@@ -275,11 +113,11 @@ class Record implements Arrayable
             $data['variables']['host_name'] = $hostname;
         }
 
-        if ($this->exception instanceof AegisExceptionInterface) {
-            $merge = $this->exception->getOverwriteData();
+        if ($this->throwable instanceof AegisExceptionInterface) {
+            $merge = $this->throwable->getOverwriteData();
 
-            $merge['extra'] = $this->exception->getExtraMetadata();
-            $merge['tags'] = $this->exception->getTags();
+            $merge['extra'] = $this->throwable->getExtraMetadata();
+            $merge['tags'] = $this->throwable->getTags();
 
             $data = [
                 ...$data,
@@ -287,6 +125,55 @@ class Record implements Arrayable
             ];
         }
 
-        return $data;
+        return \array_filter($data);
+    }
+
+    protected function buildTraces(): array
+    {
+        $ignores = ['vendor', ...Config::get('aegis.ignore', [])];
+        $backtrace = \debug_backtrace(0);
+        $raw = [
+            ...($this->throwable ? [
+                'file' => $this->throwable->getFile(),
+                'line' => $this->throwable->getLine(),
+                'class' => \get_class($this->throwable),
+                'type' => '{thrown}'
+            ] : [
+                'file' => '{unknown}',
+                'type' => '{unknown}',
+            ]),
+            ...$this->throwable ? $this->throwable->getTrace() : $backtrace,
+        ];
+        $cause = false;
+        $traces = [];
+
+        foreach ($raw as $i => $trace) {
+            if ($i <= 0) {
+                continue;
+            }
+            $paths = \array_filter(\preg_split('/[\\\\\/]/', File::relativePathOf(
+                \array_key_exists('file', $raw[$i - 1]) ? $raw[$i - 1]['file'] : '{unknown}',
+            )));
+            $overwrite = ['file' => \implode('/', $paths)];
+            if (!\in_array($paths[0], $ignores)) {
+                $cause = true;
+                $overwrite['cause'] = 1;
+            }
+            $traces[] = \array_filter(\array_merge([
+                'type' => null,
+                'args' => null,
+                'class' => '{closure}',
+                'preview' => \array_key_exists('file', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
+                    ? (new File($raw[$i - 1]['file']))
+                        ->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
+                    : [],
+            ], $trace, $overwrite));
+        }
+
+        if (!$cause) {
+            $traces[0]['cause'] = true;
+        }
+
+        return $traces;
     }
 }
