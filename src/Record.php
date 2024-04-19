@@ -11,8 +11,6 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Str;
-use Monolog\Logger;
 
 class Record implements Arrayable
 {
@@ -60,7 +58,7 @@ class Record implements Arrayable
             'method' => Request::method(),
             'fullUrl' => Request::fullUrl(),
 
-            'release' => $release,
+            'release' => $release ?: '{unknown}',
             'dist' => Config::get('aegis.dist'),
 
             'message' => $this->message,
