@@ -154,7 +154,7 @@ class Record implements Arrayable
 
             $hasFile = \array_key_exists('file', $raw[$i - 1]);
             $paths = $hasFile
-                ? \preg_split('/[\\\\\/]/', File::relativePathOf($raw[$i - 1]['file']))
+                ? \array_values(\array_filter(\preg_split('/[\\\\\/]/', File::relativePathOf($raw[$i - 1]['file']))))
                 : ['{unknown}'];
             $overwrite = ['file' => \implode('/', $paths)];
             if (\count($paths) > 0 && !\in_array($paths[0], $ignores)) {
