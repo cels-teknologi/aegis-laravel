@@ -163,13 +163,18 @@ class Record implements Arrayable
             $paths = $hasFile
                 ? \array_values(\array_filter(\preg_split('/[\\\\\/]/', File::relativePathOf($raw[$i - 1]['file']))))
                 : ['{unknown}'];
-            $overwrite = ['file' => \implode('/', $paths)];
+            $overwrite = [
+                'file' => \implode('/', $paths),
+                'line' => \array_key_exists('line', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
+                    ? (int) $raw[$i - 1]['line']
+                    : 0
+            ];
             if (\count($paths) > 0 && !\in_array($paths[0], $ignores)) {
                 $cause = true;
                 $overwrite['cause'] = 1;
             }
             $traces[] = \array_filter(\array_merge([
-                'preview' => $hasFile && \array_key_exists('line', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0 && $file
+                'preview' => $hasFile && $overwrite['line'] > 0 && $file
                     ? $file->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
                     : [],
             ], $trace, $overwrite));
