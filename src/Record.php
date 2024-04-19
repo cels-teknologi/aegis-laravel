@@ -64,7 +64,7 @@ class Record implements Arrayable
             'dist' => Config::get('aegis.dist'),
 
             'message' => $this->message,
-            'throwable' => !! $this->throwable,
+            'throwable' => $this->throwable ? 1 : 0,
             'traces' => $this->traces,
             'context' => $this->context,
             'extra' => $this->extra,
