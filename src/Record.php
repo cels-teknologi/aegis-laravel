@@ -77,6 +77,9 @@ class Record implements Arrayable
         $lines = \abs((int) Config::get('aegis.lines', 15));
         $content = \file($file);
         $max = \count($content);
+        if ($line > 15 && $max - $line < 15) {
+            $line = \max(1, $max - 15);
+        }
 
         for ($i = -1 * $lines; $i <= $lines; $i++) {
             $currentLine = $line + $i;
