@@ -46,11 +46,11 @@ class Aegis
         );
         $onlyThrowables = Config::get('aegis.only_throwables', false);
         $record = new Record(
-            $psr3Level,
             $message,
             $context,
             $extra,
             $isThrowable ? $context['exception'] : null,
+            $psr3Level,
         );
 
         $r = 0;

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
+use Monolog\Logger;
 
 class Record implements Arrayable
 {
@@ -17,11 +18,11 @@ class Record implements Arrayable
     protected $cause;
 
     public function __construct(
-        protected int $psr3Level = 100,
         protected string $message,
         protected array $context,
         protected array $extra,
         protected ?\Throwable $exception = null,
+        protected int $psr3Level = 100,
     ) {
         if ($this->exception) {
             $this->cause = $this->determineCause();
@@ -166,9 +167,18 @@ class Record implements Arrayable
      */
     public function generateKey(): string
     {
-        $classname = $this->exception ? \get_class($this->exception) : 'Log';
-        
-        return "aegis___{$classname}_{$this->cause['file']}_{$this->cause['line']}";
+        $levelName = \mb_strtolower(
+            \class_exists('\\Monolog\\Level')
+                ? \Monolog\Level::from($this->psr3Level)->name
+                : Logger::getLevelName($this->psr3Level)
+        );
+        $className = $this->exception
+            ? \get_class($this->exception)
+            : \get_class(App::make('log'));
+        $cause = $this->cause
+            ? "{$this->cause['file']}:{$this->cause['line']}"
+            : 'Log';
+        return "aegis___{$levelName}_{$className}_{$cause}";
     }
 
     /**
