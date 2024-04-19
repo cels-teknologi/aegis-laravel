@@ -135,12 +135,8 @@ class Record implements Arrayable
         $raw = [
             ...($this->throwable ? [
                 'file' => $this->throwable->getFile(),
-                'line' => $this->throwable->getLine(),
-                'class' => \get_class($this->throwable),
-                'type' => '{thrown}'
             ] : [
                 'file' => '{unknown}',
-                'type' => '{unknown}',
             ]),
             ...$this->throwable ? $this->throwable->getTrace() : $backtrace,
         ];
@@ -160,9 +156,6 @@ class Record implements Arrayable
                 $overwrite['cause'] = 1;
             }
             $traces[] = \array_filter(\array_merge([
-                'type' => null,
-                'args' => null,
-                'class' => '{closure}',
                 'preview' => \array_key_exists('file', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
                     ? (new File($raw[$i - 1]['file']))
                         ->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
