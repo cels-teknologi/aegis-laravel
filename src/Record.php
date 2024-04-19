@@ -64,7 +64,6 @@ class Record implements Arrayable
             'dist' => Config::get('aegis.dist'),
 
             'message' => $this->message,
-            'throwable' => $this->throwable ? 1 : 0,
             'traces' => $this->traces,
             'context' => $this->context,
             'extra' => $this->extra,
@@ -79,6 +78,10 @@ class Record implements Arrayable
                 'client_ip' => Request::server('REMOTE_ADDR'),
             ],
         ];
+
+        if ($this->throwable) {
+            $data['throwable'] = \get_class($this->throwable);
+        }
 
         $collects = [];
         if (Config::get('aegis.collect.env', false)) {
@@ -132,31 +135,36 @@ class Record implements Arrayable
     {
         $ignores = ['vendor', ...Config::get('aegis.ignore', [])];
         $backtrace = \debug_backtrace(0);
-        $raw = [
-            ...($this->throwable ? [
+        $raw = \array_merge(
+            // The first ($i = 0) gets ignored, this is just to shift filenames...
+            $this->throwable ? [[
                 'file' => $this->throwable->getFile(),
-            ] : [
+            ]] : [[
                 'file' => '{unknown}',
-            ]),
-            ...$this->throwable ? $this->throwable->getTrace() : $backtrace,
-        ];
+            ]],
+            $this->throwable ? $this->throwable->getTrace() : $backtrace,
+        );
         $cause = false;
         $traces = [];
 
+        // Loop for each traces, shift filename
         foreach ($raw as $i => $trace) {
+            // Ignore the first index
             if ($i <= 0) {
                 continue;
             }
-            $paths = \array_filter(\preg_split('/[\\\\\/]/', File::relativePathOf(
-                \array_key_exists('file', $raw[$i - 1]) ? $raw[$i - 1]['file'] : '{unknown}',
-            )));
+
+            $hasFile = \array_key_exists('file', $raw[$i - 1]);
+            $paths = $hasFile
+                ? \preg_split('/[\\\\\/]/', File::relativePathOf($raw[$i - 1]['file']))
+                : ['{unknown}'];
             $overwrite = ['file' => \implode('/', $paths)];
-            if (!\in_array($paths[0], $ignores)) {
+            if (\count($paths) > 0 && !\in_array($paths[0], $ignores)) {
                 $cause = true;
                 $overwrite['cause'] = 1;
             }
             $traces[] = \array_filter(\array_merge([
-                'preview' => \array_key_exists('file', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
+                'preview' => $hasFile && \array_key_exists('line', $raw[$i - 1]) && ((int) $raw[$i - 1]['line']) > 0
                     ? (new File($raw[$i - 1]['file']))
                         ->preview($raw[$i - 1]['line'], (int) Config::get('aegis.lines', 15))
                     : [],

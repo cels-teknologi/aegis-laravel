@@ -3,7 +3,6 @@
 namespace Cels\Aegis;
 
 use Cels\Aegis\Contracts\ClientWrapperInterface;
-use Cels\Aegis\Http\Client;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
