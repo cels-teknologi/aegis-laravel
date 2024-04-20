@@ -8,6 +8,7 @@ use Cels\Aegis\Helpers\File;
 use Cels\Aegis\Helpers\Git;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Request;
@@ -35,8 +36,15 @@ class Record implements Arrayable
      */
     public function generateKey(): string
     {
-        $jsonEncoded = \json_encode($this->traces[0]);
-        return "aegis___{$jsonEncoded}";
+        $topEncoded = \json_encode(\array_values(Arr::only($this->traces[0], ['file', 'line'])));
+
+        $cause = \array_filter($this->traces, fn ($_) => \array_key_exists('cause', $_) && ((bool) $_['cause']));
+        $causeEncoded = '{unknown}';
+        if (\count($cause) > 0) {
+            $causeEncoded = \json_encode(\array_values(Arr::only($cause, ['file', 'line'])));
+        }
+
+        return \mb_substr("aegis___{$topEncoded}_{$causeEncoded}", 0, 200);
     }
 
     /**
