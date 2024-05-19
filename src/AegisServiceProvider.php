@@ -3,8 +3,8 @@
 namespace Cels\Aegis;
 
 use Cels\Aegis\Http\Client as AegisClient;
-use Illuminate\Log\LogManager;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -16,6 +16,8 @@ class AegisServiceProvider extends BaseServiceProvider
      */
     public function boot()
     {
+        Config::set('logging.channels.aegis', ['driver' => 'aegis']);
+
         $this->publishes([
             __DIR__ . '/../stubs/config/aegis.php' => App::configPath('aegis.php'),
         ], 'aegis-config');
@@ -31,10 +33,13 @@ class AegisServiceProvider extends BaseServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../stubs/config/aegis.php', 'aegis');
 
         $this->app->singleton('aegis', function ($app) {
-            $credentials = $app['config']['aegis']['project'];
+            $credentials = Config::get('aegis.project');
 
             return new Aegis(
-                new AegisClient($credentials['key'], $credentials['token'])
+                new AegisClient(
+                    $credentials['key'] ?: '',
+                    $credentials['token'] ?: '',
+                )
             );
         });
 
